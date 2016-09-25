@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <h1>Genres</h1>
+          <p class="lead">Welcome to our genres visualizer!</p>
+
+	<p>Input a word of your liking:</p>
+            <form method=post>
+              <div class="form-group">
+        {% if word %}
+        <input type="text" class="form-control" name="query" value="{{ word }}" maxlength=100>
+        {% else %}
+        <input type="text" class="form-control" name="query" placeholder="вычислять_V" maxlength=100>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary" name="query" value = "Produce a list of quazy-synonyms">Submit!</button>
+            </form>
+        
+     
+{% endblock %}
