@@ -1,33 +1,33 @@
 # coding: utf-8
 from flask import Flask
 from flask import request, render_template
-import os
+import os, codecs, logging, gensim, sys
 
 app = Flask(__name__)
 
 import ConfigParser
+
 config = ConfigParser.RawConfigParser()
 config.read('dsm_genres.cfg')
 
-#todo: config is not working, fix it
-#root = config.get('Files and directories', 'root')
-print os.getcwd()
+# todo: config is not working, fix it
+# root = config.get('Files and directories', 'root')
 root = '/home/liza/PycharmProjects/dsm_genres/'
-#modelsfile = config.get('Files and directories', 'models')
+# modelsfile = config.get('Files and directories', 'models')
 modelsfile = 'models.csv'
-#temp = config.get('Files and directories', 'temp')
-#tags = config.getboolean('Tags', 'use_tags')
-tags = False
-#lemmatize = config.getboolean('Other', 'lemmatize')
+# temp = config.get('Files and directories', 'temp')
+# tags = config.getboolean('Tags', 'use_tags')
+tags = True
+# lemmatize = config.getboolean('Other', 'lemmatize')
 lemmatize = False
-#dbpedia = config.getboolean('Other', 'dbpedia_images')
+# dbpedia = config.getboolean('Other', 'dbpedia_images')
 if lemmatize:
     from lemmatizer import freeling_lemmatizer
-#taglist = set(config.get('Tags', 'tags_list').split())
-#defaulttag = config.get('Tags', 'default_tag')
+# taglist = set(config.get('Tags', 'tags_list').split())
+# defaulttag = config.get('Tags', 'default_tag')
 default_tag = 'S'
-tags_list = 'S A NUM ANUM V ADV SPRO APRO ADVPRO PR CONJ PART INTJ UNKN'
-
+tags_list = 'ADJ VERB SUBST UNC ADV'
+taglist = set(tags_list.split())
 
 our_models = {}
 for line in open(root + modelsfile, 'r').readlines():
@@ -38,6 +38,17 @@ for line in open(root + modelsfile, 'r').readlines():
     if default == 'True':
         defaultmodel = identifier
         our_models[identifier] = string
+
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+models_dic = {}
+our_models = [x for x in os.listdir(root) if x.endswith('.model')][:2]
+for m in our_models:
+    models_dic[m] = gensim.models.Word2Vec.load(root + m)
+    models_dic[m].init_sims(replace=True)
+    print('apple_SUBST' in models_dic[m])
+    print >> sys.stderr, "Model", m, "from file", m, "loaded successfully."
 
 
 def process_query(userquery):
@@ -60,8 +71,59 @@ def process_query(userquery):
     return query
 
 
-@app.route('/')
+def find_synonyms(query):
+    (q, pos) = query
+    results = {}
+    qf = q
+    print models_dic
+    for model in models_dic:
+        m = models_dic[model]
+        if not qf in m:
+            candidates_set = set()
+            candidates_set.add(q.upper())
+            if tags:
+                candidates_set.add(q.split('_')[0] + '_UNKN')
+                candidates_set.add(q.split('_')[0].lower() + '_' + q.split('_')[1])
+                candidates_set.add(q.split('_')[0].capitalize() + '_' + q.split('_')[1])
+            else:
+                candidates_set.add(q.lower())
+                candidates_set.add(q.capitalize())
+            noresults = True
+            for candidate in candidates_set:
+                if candidate in m:
+                    qf = candidate
+                    noresults = False
+                    break
+            if noresults == True:
+                results[model] = [q + " is unknown to the model"]
+                return results
+            if pos == 'ALL':
+                results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
+            else:
+                results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=20) if i[0].split('_')[-1] == pos]
+            if len(results) == 0:
+                results[model] = ('No results')
+    return results
+
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
+    if request.method == 'POST':
+        input_data = 'dummy'
+        try:
+            input_data = request.form['query']
+        except:
+            pass
+        if input_data != 'dummy' and input_data.replace('_', '').replace('-', '').isalnum():
+            query = process_query(input_data)
+            if query == 'Incorrect tag!':
+                error = query
+                return render_template('home.html', error=error)
+            query = query.split('_')
+            synonyms = find_synonyms(query)
+            print(synonyms)
+            word = query[0] + '_' + query[1]
+            return render_template('home.html', result=synonyms, word=word)
     return render_template('home.html')
 
 
@@ -83,7 +145,7 @@ def genres():
             else:
                 model = model_value[0]
             message = "1;" + query + ";" + 'ALL' + ";" + model
-            result = '' #todo: get result
+            result = ''  # todo: get result
             associates_list = []
             if "unknown to the" in result or "No result" in result:
                 return render_template('home.html', error=result.decode('utf-8'))

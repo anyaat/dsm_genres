@@ -10,11 +10,24 @@
         {% if word %}
         <input type="text" class="form-control" name="query" value="{{ word }}" maxlength=100>
         {% else %}
-        <input type="text" class="form-control" name="query" placeholder="вычислять_V" maxlength=100>
+        <input type="text" class="form-control" name="query" placeholder="apple_SUBST" maxlength=100>
         {% endif %}
       </div>
-      <button type="submit" class="btn btn-primary" name="query" value = "Produce a list of quazy-synonyms">Submit!</button>
+      <button type="submit" class="btn btn-primary" name="query" value = "submit">Submit!</button>
             </form>
+    {% if error %}
+        <p> {{ error }}</p>
+    {% endif %}
+    {% if result %}
+        <table>
+        {% for key, value in result.iteritems() %}
+        <tr>
+            <th> {{ key }}</th>
+            <td> {{ value }}</td>
+        </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
         
      
 {% endblock %}
