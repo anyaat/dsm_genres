@@ -1,2 +1,4 @@
-ruscorpora	Russian National Corpus	models/ruscorpora_mean_hs.model.bin.gz	similar4	False
-news	News corpus	models/news.model.bin.gz	similar8	True
+academic#models/bnc_academic_win10.model
+fiction#models/bnc_fiction_win10.model
+news#models/bnc_news_win10.model
+all#models/bnc_all_win10.model

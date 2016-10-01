@@ -35,6 +35,19 @@
         </div>
     {% endfor %}
         </div>
+         {% if distances %}
+       <div class="row">
+       <p>Distances between this word's associates in specific genres and the whole corpus (1 - completely different, 0 - no difference)</p>
+       <table>
+           {% for key, value in distances.iteritems() %}
+            <tr>
+        <th> The whole BNC vs. {{ key }} </th>
+        <td> &nbsp;&nbsp;{{ value }} </td>
+            </tr>
+{% endfor %}
+       </table>
+       </div>
+         {% endif %}
 {% endif %}
         
      

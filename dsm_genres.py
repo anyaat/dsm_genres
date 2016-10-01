@@ -33,21 +33,25 @@ our_models = {}
 for line in open(root + modelsfile, 'r').readlines():
     if line.startswith("#"):
         continue
-    res = line.strip().split('\t')
-    (identifier, description, path, string, default) = res
-    if default == 'True':
-        defaultmodel = identifier
-        our_models[identifier] = string
+    res = line.strip().split('#')
+    (identifier, path) = res
+    our_models[identifier] = path
 
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 models_dic = {}
-our_models = [x for x in os.listdir(root) if x.endswith('.model')]
 for m in our_models:
-    models_dic[m] = gensim.models.Word2Vec.load(root + m)
+    models_dic[m] = gensim.models.Word2Vec.load(root + our_models[m])
     models_dic[m].init_sims(replace=True)
-    print >> sys.stderr, "Model", m, "from file", m, "loaded successfully."
+    print >> sys.stderr, "Model", m, "from file", our_models[m], "loaded successfully."
+
+
+def jaccard(set_1, set_2):
+    print(set_1, set_2)
+    n = len(set_1 & set_2)
+    print n, len(set_1), len(set_2)
+    return n / float(len(set_1) + len(set_2) - n)
 
 
 def process_query(userquery):
@@ -118,9 +122,17 @@ def home():
                 error = query
                 return render_template('home.html', error=error)
             query = query.split('_')
-            synonyms = find_synonyms(query)
-            print(synonyms)
-            return render_template('home.html', result=synonyms, word=query[0], pos=query[1])
+            associates = find_synonyms(query)
+            distances = {}
+            for m in models_dic:
+                if m == 'all':
+                    continue
+                set_1 = set([x.split('#')[0] for x in associates['all']])
+                set_2 = set([x.split('#')[0] for x in associates[m]])
+                distance = 1 - jaccard(set_1, set_2)
+                distances[m] = distance
+                print 'The whole BNC', 'VS', m + ':', distance
+            return render_template('home.html', result=associates, word=query[0], pos=query[1], distances=distances)
     return render_template('home.html')
 
 

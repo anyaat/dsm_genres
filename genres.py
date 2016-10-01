@@ -42,7 +42,7 @@ while True:
 	else:
 	    print word,'is not present in the model', m
     print 'Distances:'
-    for pair in combinations(models.keys(), 2):
-	distance = 1 - jaccard(associates[pair[0]], associates[pair[1]])
-	print pair[0],'VS', pair[1]+':', distance
+    for m in models.keys():
+	distance = 1 - jaccard(associates['bnc_all_win10'], associates[m])
+	print 'The whole BNC','VS', m+':', distance
 	
