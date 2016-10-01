@@ -12,7 +12,7 @@ config.read('dsm_genres.cfg')
 
 # todo: config is not working, fix it
 # root = config.get('Files and directories', 'root')
-root = '/home/liza/PycharmProjects/dsm_genres/'
+root = '/home/lizaku/PycharmProjects/dsm_genres/'
 # modelsfile = config.get('Files and directories', 'models')
 modelsfile = 'models.csv'
 # temp = config.get('Files and directories', 'temp')
@@ -43,16 +43,15 @@ for line in open(root + modelsfile, 'r').readlines():
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 models_dic = {}
-our_models = [x for x in os.listdir(root) if x.endswith('.model')][:2]
+our_models = [x for x in os.listdir(root) if x.endswith('.model')]
 for m in our_models:
     models_dic[m] = gensim.models.Word2Vec.load(root + m)
     models_dic[m].init_sims(replace=True)
-    print('apple_SUBST' in models_dic[m])
     print >> sys.stderr, "Model", m, "from file", m, "loaded successfully."
 
 
 def process_query(userquery):
-    userquery = userquery.strip().replace(u'ё', u'е')
+    userquery = userquery.strip()
     if tags:
         if '_' in userquery:
             query_split = userquery.split('_')
@@ -74,17 +73,16 @@ def process_query(userquery):
 def find_synonyms(query):
     (q, pos) = query
     results = {}
-    qf = q
-    print models_dic
+    qf = q + '_' + pos
     for model in models_dic:
         m = models_dic[model]
         if not qf in m:
             candidates_set = set()
             candidates_set.add(q.upper())
             if tags:
-                candidates_set.add(q.split('_')[0] + '_UNKN')
-                candidates_set.add(q.split('_')[0].lower() + '_' + q.split('_')[1])
-                candidates_set.add(q.split('_')[0].capitalize() + '_' + q.split('_')[1])
+                candidates_set.add(q + '_UNKN')
+                candidates_set.add(q.lower() + '_' + pos)
+                candidates_set.add(q.capitalize() + '_' + pos)
             else:
                 candidates_set.add(q.lower())
                 candidates_set.add(q.capitalize())
@@ -96,13 +94,13 @@ def find_synonyms(query):
                     break
             if noresults == True:
                 results[model] = [q + " is unknown to the model"]
-                return results
-            if pos == 'ALL':
-                results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
-            else:
-                results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=20) if i[0].split('_')[-1] == pos]
-            if len(results) == 0:
-                results[model] = ('No results')
+                #return results, models
+        if pos == 'ALL':
+            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
+        else:
+            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=20) if i[0].split('_')[-1] == pos][:10]
+        if len(results) == 0:
+            results[model] = ('No results')
     return results
 
 
@@ -122,8 +120,7 @@ def home():
             query = query.split('_')
             synonyms = find_synonyms(query)
             print(synonyms)
-            word = query[0] + '_' + query[1]
-            return render_template('home.html', result=synonyms, word=word)
+            return render_template('home.html', result=synonyms, word=query[0], pos=query[1])
     return render_template('home.html')
 
 

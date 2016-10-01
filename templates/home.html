@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <div class="row">
         <h1>Genres</h1>
           <p class="lead">Welcome to our genres visualizer!</p>
 
@@ -18,16 +19,23 @@
     {% if error %}
         <p> {{ error }}</p>
     {% endif %}
-    {% if result %}
-        <table>
-        {% for key, value in result.iteritems() %}
-        <tr>
-            <th> {{ key }}</th>
-            <td> {{ value }}</td>
-        </tr>
+     {% if result %}
+      <h3><strong> Associates for <i>{{word}}</i> ({{ pos }}) across genres</strong> </h3>
+        <div class="row">
+    {% for model in result %}
+        <div class="col-md-3">
+        <h4><strong>{{ model }}</strong></h4>
+        <ol>
+        {% for res in result[model] if not "No results" in res and res != "Incorrect tag!" %}
+        <li>
+        {{ res.split('_')[0] }} {{ res.split('#')[1] }}
+        </li>
         {% endfor %}
-        </table>
-    {% endif %}
+        </ol>
+        </div>
+    {% endfor %}
+        </div>
+{% endif %}
         
      
 {% endblock %}
