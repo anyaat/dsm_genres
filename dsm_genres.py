@@ -48,9 +48,7 @@ for m in our_models:
 
 
 def jaccard(set_1, set_2):
-    print(set_1, set_2)
     n = len(set_1 & set_2)
-    print n, len(set_1), len(set_2)
     return n / float(len(set_1) + len(set_2) - n)
 
 
@@ -131,7 +129,6 @@ def home():
                 set_2 = set([x.split('#')[0] for x in associates[m]])
                 distance = 1 - jaccard(set_1, set_2)
                 distances[m] = distance
-                print 'The whole BNC', 'VS', m + ':', distance
             return render_template('home.html', result=associates, word=query[0], pos=query[1], distances=distances)
     return render_template('home.html')
 
