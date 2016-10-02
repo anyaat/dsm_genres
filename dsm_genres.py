@@ -12,20 +12,20 @@ config.read('dsm_genres.cfg')
 
 # todo: config is not working, fix it
 # root = config.get('Files and directories', 'root')
-root = '/home/lizaku/PycharmProjects/dsm_genres/'
+root = '/home/kender/Docs/bigdata/genres/dsm_genres/'
 # modelsfile = config.get('Files and directories', 'models')
 modelsfile = 'models.csv'
 # temp = config.get('Files and directories', 'temp')
 # tags = config.getboolean('Tags', 'use_tags')
 tags = True
 # lemmatize = config.getboolean('Other', 'lemmatize')
-lemmatize = False
+lemmatize = True
 # dbpedia = config.getboolean('Other', 'dbpedia_images')
 if lemmatize:
-    from lemmatizer import freeling_lemmatizer
+    from tagger import tagword, tagsentence
 # taglist = set(config.get('Tags', 'tags_list').split())
 # defaulttag = config.get('Tags', 'default_tag')
-default_tag = 'S'
+default_tag = 'SUBST'
 tags_list = 'ADJ VERB SUBST UNC ADV'
 taglist = set(tags_list.split())
 
@@ -61,14 +61,15 @@ def process_query(userquery):
                 query = ''.join(query_split[:-1]).lower() + '_' + query_split[-1]
             else:
                 return 'Incorrect tag!'
-    else:
-        if lemmatize:
-            pos_tag = freeling_lemmatizer(userquery)
-            if pos_tag == 'A' and userquery.endswith(u'о'):
-                pos_tag = 'ADV'
-            query = userquery.lower() + '_' + pos_tag
         else:
-            return 'Incorrect tag!'
+            if lemmatize:
+            #pos_tag = freeling_lemmatizer(userquery)
+            #if pos_tag == 'A' and userquery.endswith(u'о'):
+            #    pos_tag = 'ADV'
+            #query = userquery.lower() + '_' + pos_tag
+                query = tagword(userquery)
+            else:
+                return 'Incorrect tag!'
     return query
 
 

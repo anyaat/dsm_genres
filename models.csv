@@ -1,4 +1,4 @@
-academic#models/bnc_academic_win10.model
-fiction#models/bnc_fiction_win10.model
-news#models/bnc_news_win10.model
-all#models/bnc_all_win10.model
+academic#bnc_academic_win10.model
+fiction#bnc_fiction_win10.model
+news#bnc_news_win10.model
+all#bnc_all_win10.model
