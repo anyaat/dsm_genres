@@ -95,5 +95,3 @@ def tagword(word):
         pos = conversion[pos]
     output = lemma + '_' + pos
     return output
-
-print tagword('cup')
