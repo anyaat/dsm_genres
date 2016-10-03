@@ -1,20 +1,20 @@
 #!/usr/local/python/bin/python2.7
 # coding: utf-8
 
-import socket
+import socket, json
 import sys, datetime
 from thread import *
 import sys, gensim, logging
 
 import ConfigParser
 config = ConfigParser.RawConfigParser()
-config.read('webvectors.cfg')
+config.read('dsm_genres.cfg')
 
 #root = config.get('Files and directories', 'root')
-root = '/home/kender/Docs/bigdata/genres/dsm_genres/'
+root = '/home/andreku/www/dsm_genres/'
 #HOST = config.get('Sockets', 'host')  # Symbolic name meaning all available interfaces
 HOST = 'localhost'
-PORT = 12666
+PORT = 15666
 #PORT = config.getint('Sockets', 'port')  # Arbitrary non-privileged port
 #tags = config.getboolean('Tags', 'use_tags')
 tags = True
@@ -29,7 +29,7 @@ for line in open(root + config.get('Files and directories', 'models'), 'r').read
     if line.startswith("#"):
         continue
     res = line.strip().split('\t')
-    (identifier, description, path, string, default) = res
+    (identifier, description, path, default) = res
     our_models[identifier] = path
 
 models_dic = {}
@@ -47,7 +47,7 @@ for m in our_models:
 def find_synonyms(query):
     (q, pos) = query
     results = {}
-    qf = q + '_' + pos
+    qf = q
     for model in models_dic:
         m = models_dic[model]
         if not qf in m:
@@ -113,11 +113,9 @@ def clientthread(conn, addr):
             break
         now = datetime.datetime.now()
         print >> sys.stderr, now.strftime("%Y-%m-%d %H:%M"), '\t', addr[0] + ':' + str(addr[1]), '\t', data
-        if query[0] == "1" and not 'unknown to the' in output[0] and not "No results" in output[0]:
-            reply = ' '.join(output[:-1])
-            vector = output[-1].tolist()
-            str_vector = ','.join([str(e) for e in vector])
-            conn.sendall(reply.encode('utf-8') + "&" + str_vector)
+        if query[0] == "1":
+            reply = json.dumps(output)
+            conn.sendall(reply.encode('utf-8'))
         elif query[0] == "4":
             reply = output
             conn.sendall(reply.encode('utf-8'))

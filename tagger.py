@@ -8,7 +8,7 @@ import json
 # Start server with something like:
 # java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer --port 9000
 
-port = 9000
+port = 9999
 conversion = {"CC": "CONJ",
               "CD": "ADJ",
               "CD|RB": "UNC",

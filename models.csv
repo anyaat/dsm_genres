@@ -1,4 +1,4 @@
-academic#bnc_academic_win10.model
-fiction#bnc_fiction_win10.model
-news#bnc_news_win10.model
-all#bnc_all_win10.model
+academic	Academic texts	BNC/genres/bnc_academic_win10.model	False
+fiction	Fiction texts	BNC/genres/bnc_fiction_win10.model	False
+news	News texts	BNC/genres/bnc_news_win10.model	False
+all	Whole BNC	BNC/genres/bnc_all_win10.model	True
