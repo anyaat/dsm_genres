@@ -5,10 +5,47 @@ import os, codecs, logging, gensim, sys
 
 app = Flask(__name__)
 
-import ConfigParser
+import ConfigParser, socket
 
 config = ConfigParser.RawConfigParser()
 config.read('dsm_genres.cfg')
+
+# Establishing connection to model server
+host = config.get('Sockets', 'host')
+port = config.getint('Sockets', 'port')
+try:
+    remote_ip = socket.gethostbyname(host)
+except socket.gaierror:
+    # could not resolve
+    print >> sys.stderr, 'Hostname could not be resolved. Exiting'
+    sys.exit()
+
+
+def serverquery(message):
+    # create an INET, STREAMing socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except socket.error:
+        print >> sys.stderr, 'Failed to create socket'
+        return None
+
+    # Connect to remote server
+    s.connect((remote_ip, port))
+    # Now receive data
+    reply = s.recv(1024)
+
+    # Send some data to remote server
+    try:
+        s.sendall(message.encode('utf-8'))
+    except socket.error:
+        # Send failed
+        print >> sys.stderr, 'Send failed'
+        s.close()
+        return None
+    # Now receive data
+    reply = s.recv(32768)
+    s.close()
+    return reply
 
 # todo: config is not working, fix it
 # root = config.get('Files and directories', 'root')
@@ -73,38 +110,7 @@ def process_query(userquery):
     return query
 
 
-def find_synonyms(query):
-    (q, pos) = query
-    results = {}
-    qf = q + '_' + pos
-    for model in models_dic:
-        m = models_dic[model]
-        if not qf in m:
-            candidates_set = set()
-            candidates_set.add(q.upper())
-            if tags:
-                candidates_set.add(q + '_UNKN')
-                candidates_set.add(q.lower() + '_' + pos)
-                candidates_set.add(q.capitalize() + '_' + pos)
-            else:
-                candidates_set.add(q.lower())
-                candidates_set.add(q.capitalize())
-            noresults = True
-            for candidate in candidates_set:
-                if candidate in m:
-                    qf = candidate
-                    noresults = False
-                    break
-            if noresults == True:
-                results[model] = [q + " is unknown to the model"]
-                #return results, models
-        if pos == 'ALL':
-            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
-        else:
-            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=20) if i[0].split('_')[-1] == pos][:10]
-        if len(results) == 0:
-            results[model] = ('No results')
-    return results
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -120,8 +126,10 @@ def home():
             if query == 'Incorrect tag!':
                 error = query
                 return render_template('home.html', error=error)
-            query = query.split('_')
-            associates = find_synonyms(query)
+            #query = query.split('_')
+            message = "1;" + query + ";" + 'ALL'
+            associates = serverquery(message)
+            #associates = find_synonyms(query)
             distances = {}
             for m in models_dic:
                 if m == 'all':
