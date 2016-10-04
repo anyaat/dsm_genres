@@ -26,11 +26,15 @@
         <div class="col-md-3">
         <h4><strong>{{ model }}</strong></h4>
         <ol>
-        {% for res in result[model] if not "No results" in res and res != "Incorrect tag!" %}
+        {% for res in result[model] if not "No results" in res and res != "Incorrect tag!" and not 'unknown' in res  %}
         <li>
         {{ res.split('_')[0] }} {{ res.split('#')[1] }}
         </li>
         {% endfor %}
+        {% if 'is unknown' in result[model][0] %}
+        <i>{{ result[model][0] }}</i>
+        
+        {% endif %}
         </ol>
         </div>
     {% endfor %}
