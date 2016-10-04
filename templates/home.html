@@ -1,11 +1,11 @@
-{% extends "genre_base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
     <div class="row">
-        <h1>Genres</h1>
-          <p class="lead">Welcome to our genres visualizer!</p>
+        <h1>English language registers explorer</h1>
+          <p class="lead">powered by word embeddings</p>
 
-	<p>Input a word of your liking:</p>
+	<p>Your query word:</p>
             <form method=post>
               <div class="form-group">
         {% if word %}

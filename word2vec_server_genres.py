@@ -70,7 +70,8 @@ def find_synonyms(query):
                 results[model] = [q + " is unknown to the model"]
                 #return results, models
         if pos == 'ALL':
-            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
+            #results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=10)]
+            results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=30) if i[0].split('_')[-1] == qf.split('_')[-1]][:10]
         else:
             results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=qf, topn=20) if i[0].split('_')[-1] == pos][:10]
         if len(results) == 0:
