@@ -13,6 +13,7 @@ from collections import OrderedDict
 from tagger import tagsentence, tagword
 
 import ConfigParser, socket
+import operator
 
 config = ConfigParser.RawConfigParser()
 config.read('dsm_genres.cfg')
@@ -25,7 +26,7 @@ for line in open(root + modelsfile, 'r').readlines():
 	continue
     res = line.strip().split('\t')
     (identifier, description, path, default) = res
-    our_models[identifier] = path
+    our_models[identifier] = description
 
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -111,7 +112,6 @@ def genrehome():
                 error = query
                 return render_template('home.html', error=error)
             message = "1;" + query + ";" + 'ALL'
-            print message
             associates = json.loads(serverquery(message))
             distances = {}
             for m in our_models:
@@ -121,6 +121,23 @@ def genrehome():
                 set_2 = set([x.split('#')[0] for x in associates[m]])
                 distance = 1 - jaccard(set_1, set_2)
                 distances[m] = distance
-            return render_template('home.html', result=associates, word=query.split('_')[0], pos=query.split('_')[-1], distances=distances)
+            return render_template('home.html', result=associates, word=query.split('_')[0], pos=query.split('_')[-1], distances=distances, models=our_models)
     return render_template('home.html')
+
+@genre.route('/embeddings/registers/text/', methods=['GET', 'POST'])
+def genretext():
+    if request.method == 'POST':
+        input_data = 'dummy'
+        try:
+            input_data = request.form['textquery']
+        except:
+            pass
+        if input_data != 'dummy':
+            query = input_data.strip()
+            message = "2;" + query
+            result = json.loads(serverquery(message))
+            ranking = sorted(result.items(), key=operator.itemgetter(1), reverse=True)
+            return render_template('text.html', result=ranking, text=input_data, models=our_models)
+    return render_template('text.html')
+
 

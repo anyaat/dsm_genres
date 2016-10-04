@@ -5,6 +5,7 @@
         <h1>English language registers explorer</h1>
           <p class="lead">powered by word embeddings</p>
 
+	<h2>Word analysis</h2>
 	<p>Your query word:</p>
             <form method=post>
               <div class="form-group">
@@ -20,11 +21,11 @@
         <p> {{ error }}</p>
     {% endif %}
      {% if result %}
-      <h3><strong> Associates for <i>{{word}}</i> ({{ pos }}) across genres</strong> </h3>
+      <h3><strong> Associates for <i>{{word}}</i> ({{ pos }}) across language registers</strong> </h3>
         <div class="row">
     {% for model in result %}
         <div class="col-md-3">
-        <h4><strong>{{ model }}</strong></h4>
+        <h4><strong>{{ models[model] }}</strong></h4>
         <ol>
         {% for res in result[model] if not "No results" in res and res != "Incorrect tag!" and not 'unknown' in res  %}
         <li>
@@ -41,7 +42,9 @@
         </div>
          {% if distances %}
        <div class="row">
-       <p>Distances between this word's associates in specific genres and the whole corpus (1 - completely different, 0 - no difference)</p>
+       <h2>Distances between associated in particular registers and the whole corpus</h2>
+    <p><i>1 - completely different, 0 - no difference</i></p>
+     <big>
        <table>
            {% for key, value in distances.iteritems() %}
             <tr>
@@ -50,6 +53,7 @@
             </tr>
 {% endfor %}
        </table>
+       </big>
        </div>
          {% endif %}
 {% endif %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <h1>English language registers explorer</h1>
+          <p class="lead">powered by word embeddings</p>
+	<h2>Text analysis</h2>
+	<p>Enter a single English sentence or a small text:</p>
+            
+            
+            <form method=post id="textquery">
+              <div class="form-group">
+    {% if text %}
+        <textarea form ="textquery" name="textquery" id="textquery" cols="45" rows=8 wrap="soft" required placeholder="{{ text }}" maxlength=10000></textarea>
+        {% else %}
+        <textarea form ="textquery" name="textquery" id="textquery" cols="45" rows=8 wrap="soft" required placeholder="Informant filled in the questionnaire." maxlength=10000></textarea>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary" name="textquery" value = "analyze">Analyze</button>
+            </form>
+    {% if error %}
+        <p> {{ error }}</p>
+    {% endif %}
+     {% if result %}
+      <h3><strong>Language registers likelihood to produce this text (ranked by decreasing probability):</strong> </h3>
+    <i>The closer log-likelihood values are to zero, the more probable is the register.</i>
+    <big>
+    <ol>
+    {% for element in result if element[0] != 'all' %}
+	<li>{{ models[element[0]] }} {{ "{:.2f} ".format(element[1]) }}</li>
+    {% endfor %}
+        </ol>
+    </big>
+    {% endif %}
+
+{% endblock %}

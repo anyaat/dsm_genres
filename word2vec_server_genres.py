@@ -5,6 +5,8 @@ import socket, json
 import sys, datetime
 from thread import *
 import sys, gensim, logging
+from tagger import tagword, tagsentence
+import numpy as np
 
 import ConfigParser
 config = ConfigParser.RawConfigParser()
@@ -39,7 +41,6 @@ for m in our_models:
         models_dic[m] = gensim.models.Word2Vec.load_word2vec_format(our_models[m], binary=True)
     else:
         models_dic[m] = gensim.models.Word2Vec.load(our_models[m])
-    models_dic[m].init_sims(replace=True)
     print >> sys.stderr, "Model", m, "from file", our_models[m], "loaded successfully."
 
 # Vector functions
@@ -80,8 +81,17 @@ def find_synonyms(query):
         #    results[model] = ('No results')
     return results
 
-operations = {'1': find_synonyms}
-    #, '2': find_similarity, '3': scalculator, '4': vector}
+def classify(text):
+    sentences = [tagsentence(text[0].strip())]
+    results = {}
+    for model in models_dic:
+        m = models_dic[model]
+        sc = m.score(sentences, total_sentences=len(sentences))
+        sc = np.float(sc)
+        results[model] = sc
+    return results
+
+operations = {'1': find_synonyms, '2': classify}
 
 # Bind socket to local host and port
 
@@ -110,20 +120,14 @@ def clientthread(conn, addr):
         #Receiving from client
         data = conn.recv(1024)
         data = data.decode("utf-8")
-        query = data.split(";")
+	query = data.split(";")
         output = operations[query[0]]((query[1:]))
         if not data:
             break
         now = datetime.datetime.now()
         print >> sys.stderr, now.strftime("%Y-%m-%d %H:%M"), '\t', addr[0] + ':' + str(addr[1]), '\t', data
-        if query[0] == "1":
+        if query[0] == "1" or query[0] == "2":
             reply = json.dumps(output)
-            conn.sendall(reply.encode('utf-8'))
-        elif query[0] == "4":
-            reply = output
-            conn.sendall(reply.encode('utf-8'))
-        else:
-            reply = ' '.join(output)
             conn.sendall(reply.encode('utf-8'))
         break
 
