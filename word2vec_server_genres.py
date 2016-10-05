@@ -12,14 +12,10 @@ import ConfigParser
 config = ConfigParser.RawConfigParser()
 config.read('dsm_genres.cfg')
 
-#root = config.get('Files and directories', 'root')
-root = '/home/andreku/www/dsm_genres/'
-#HOST = config.get('Sockets', 'host')  # Symbolic name meaning all available interfaces
-HOST = 'localhost'
-PORT = 15666
-#PORT = config.getint('Sockets', 'port')  # Arbitrary non-privileged port
-#tags = config.getboolean('Tags', 'use_tags')
-tags = True
+root = config.get('Files and directories', 'root')
+HOST = config.get('Sockets', 'host')  # Symbolic name meaning all available interfaces
+PORT = config.getint('Sockets', 'port')  # Arbitrary non-privileged port
+tags = config.getboolean('Tags', 'use_tags')
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -74,21 +70,25 @@ def find_synonyms(query):
         	#return results, models
 	if posfilter == 'ALL':
 	    #results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=q, topn=10)]
-	    results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=q, topn=30) if i[0].split('_')[-1] == pos][:10]
+	    results[model] = [(i[0], i[1]) for i in m.most_similar(positive=q, topn=30) if i[0].split('_')[-1] == pos][:10]
 	else:
-	    results[model] = [i[0] + "#" + str(i[1]) for i in m.most_similar(positive=q, topn=20) if i[0].split('_')[-1] == posfilter][:10]
+	    results[model] = [(i[0], i[1]) for i in m.most_similar(positive=q, topn=20) if i[0].split('_')[-1] == posfilter][:10]
         #if len(results) == 0:
         #    results[model] = ('No results')
     return results
 
 def classify(text):
-    sentences = [tagsentence(text[0].strip())]
+    text = text[0].strip()
+    #text = text.decode('utf-8','replace')
+    sentences = tagsentence(text.encode('ascii', 'replace'))
     results = {}
     for model in models_dic:
         m = models_dic[model]
         sc = m.score(sentences, total_sentences=len(sentences))
+        sc = np.median(sc)
         sc = np.float(sc)
         results[model] = sc
+    results['words'] = sentences
     return results
 
 operations = {'1': find_synonyms, '2': classify}

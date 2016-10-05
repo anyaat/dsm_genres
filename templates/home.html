@@ -6,7 +6,7 @@
           <p class="lead">powered by word embeddings</p>
 
 	<h2>Word analysis</h2>
-	<p>Your query word:</p>
+	<p>Type your query word:</p>
             <form method=post>
               <div class="form-group">
         {% if word %}
@@ -21,7 +21,7 @@
         <p> {{ error }}</p>
     {% endif %}
      {% if result %}
-      <h3><strong> Associates for <i>{{word}}</i> ({{ pos }}) across language registers</strong> </h3>
+      <h3>Words related to <a href="http://ltr.uio.no/embeddings/registers/word/{{ word+'_'+pos }}"><i>{{word}}</i></a> across different language registers</h3>
         <div class="row">
     {% for model in result %}
         <div class="col-md-3">
@@ -29,7 +29,7 @@
         <ol>
         {% for res in result[model] if not "No results" in res and res != "Incorrect tag!" and not 'unknown' in res  %}
         <li>
-        {{ res.split('_')[0] }} {{ res.split('#')[1] }}
+        <a href="http://ltr.uio.no/embeddings/registers/word/{{ res[0] }}">{{ res[0].split('_')[0] }}</a> <small><i>{{ "{:.4f} ".format(res[1]) }}</i></small>
         </li>
         {% endfor %}
         {% if 'is unknown' in result[model][0] %}
@@ -42,14 +42,14 @@
         </div>
          {% if distances %}
        <div class="row">
-       <h2>Distances between associated in particular registers and the whole corpus</h2>
+       <h3>Distances between <a href="http://ltr.uio.no/embeddings/registers/word/{{ word+'_'+pos }}"><i>{{word}}</i></a> meaning in particular registers and the whole corpus</h3>
     <p><i>1 - completely different, 0 - no difference</i></p>
      <big>
        <table>
-           {% for key, value in distances.iteritems() %}
+           {% for key, value in distances %}
             <tr>
-        <th> The whole BNC vs. {{ key }} </th>
-        <td> &nbsp;&nbsp;{{ value }} </td>
+        <th> The whole BNC vs. {{ models[key] }} </th>
+        <td> &nbsp;&nbsp;{{ "{:.2f} ".format(value) }} </td>
             </tr>
 {% endfor %}
        </table>

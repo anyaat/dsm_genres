@@ -3,6 +3,7 @@
 
 import requests
 import json
+import codecs
 
 # Demands Stanford Core NLP server running on a defined port
 # Start server with something like:
@@ -71,16 +72,18 @@ def tagsentence(sentence):
         'http://localhost:%s/?properties={"annotators": "tokenize,ssplit,pos,lemma", "outputFormat": "json"}' % port,
         data=sentence).text
     dictionary = json.loads(tagged)
-    tokens = dictionary["sentences"][0]["tokens"]
-    print tokens
-    lemmas = []
-    for token in tokens:
-        lemma = token['lemma'].lower()
-        pos = token['pos']
-        if pos in conversion:
-            pos = conversion[pos]
-        lemmas.append(lemma + '_' + pos)
-    return lemmas
+    all_lemmas = []
+    for s in dictionary["sentences"]:
+	lemmas = []
+	tokens = s["tokens"]
+        for token in tokens:
+	    lemma = token['lemma'].lower()
+	    pos = token['pos']
+	    if pos in conversion:
+		pos = conversion[pos]
+	    lemmas.append(lemma + '_' + pos)
+	all_lemmas.append(lemmas)
+    return all_lemmas
 
 
 def tagword(word):
@@ -95,3 +98,4 @@ def tagword(word):
         pos = conversion[pos]
     output = lemma + '_' + pos
     return output
+

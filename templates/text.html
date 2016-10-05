@@ -22,15 +22,26 @@
         <p> {{ error }}</p>
     {% endif %}
      {% if result %}
-      <h3><strong>Language registers likelihood to produce this text (ranked by decreasing probability):</strong> </h3>
-    <i>The closer log-likelihood values are to zero, the more probable is the register.</i>
+      <h3>Language registers likelihood to produce this text (ranked by decreasing probability):</h3>
+    <i>The closer log-likelihood values are to zero, the more probable is the register. For highly probable registers, the font size increases.</i>
     <big>
-    <ol>
+    <table width="80%">
     {% for element in result if element[0] != 'all' %}
-	<li>{{ models[element[0]] }} {{ "{:.2f} ".format(element[1]) }}</li>
+    <tr>
+    <td><span style="font-size: {{ (element[1]+100)|int }}px;">{{ models[element[0]] }}</span></td><td> {{ "{:.2f} ".format(element[1]) }}</td>
+    </tr>
     {% endfor %}
-        </ol>
+    </table>
     </big>
+    <h3>Explore words in your text (only content words are shown):</h3>
+    <p>{{ text|wordcount }} words in total</p>
+    
+    {% for sentence in lemmas %}
+    {% for lemma in sentence if lemma.split('_')[-1] in tags %}
+    <a href="http://ltr.uio.no/embeddings/registers/word/{{ lemma }}" title="Explore {{ lemma }} across registers" alt="Explore {{ lemma }} across registers">{{ lemma }}</a>
+    {% endfor %}
+    <br/>
+    {% endfor %}
     {% endif %}
 
 {% endblock %}
