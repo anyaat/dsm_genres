@@ -12,8 +12,18 @@ import gensim
 from collections import OrderedDict
 from tagger import tagsentence, tagword
 
+import hashlib
+import seaborn as sns 
+import networkx as nx
+import matplotlib.pyplot as plt
+from itertools import combinations
+from dm_graphs import graph_reduce, MST_pathfinder
+from gensim.models import Word2Vec
+
 import ConfigParser, socket
 import operator
+
+sns.set_style('white')
 
 config = ConfigParser.RawConfigParser()
 config.read('dsm_genres.cfg')
@@ -99,6 +109,25 @@ def serverquery(message):
     s.close()
     return reply
 
+def plot(m, model_path, query, associates):
+    model = Word2Vec.load(model_path)
+    ass_set = set([x[0] for x in associates[m]])
+    edges = ((a.split('_')[0], b.split('_')[0], model.similarity(a,b)) for a, b in combinations(ass_set, 2))
+    G = nx.Graph()
+    G.add_weighted_edges_from(edges)
+    NG = graph_reduce(G)
+    MST = MST_pathfinder(NG)
+    pos = nx.spring_layout(MST)
+    nx.draw_networkx_nodes(MST, pos, node_size=100, node_color='#3498db', alpha=0.3)
+    nx.draw_networkx_edges(MST, pos, width=2, alpha=0.4, edge_color='#3498db')
+    nx.draw_networkx_labels(MST, pos, font_size=12, font_color='#34495e', font_family='sans-serif', weight='bold')
+    plt.title(m, fontsize=16, fontweight='bold')
+    mm = hashlib.md5()
+    name = m + '_' + query.encode('ascii', 'backslashreplace')
+    mm.update(name)
+    plt.savefig(root + 'plots/' + name + '.png', dpi=150, bbox_inches='tight')
+    plt.clf()
+
 @genre.route('/embeddings/registers/', methods=['GET', 'POST'])
 def genrehome():
     if request.method == 'POST':
@@ -116,12 +145,16 @@ def genrehome():
             associates = json.loads(serverquery(message))
             distances = {}
             for m in our_models:
+                plotfile = "%s_%s.png" % (m, query)
+                if not os.access(root + '/plots/' + plotfile, os.F_OK):
+                    print >> sys.stderr, 'No previous image found'
+                    plot(m, our_models[m], query, associates)
                 if m == 'all':
                     continue
                 set_1 = set([x[0] for x in associates['all']])
                 set_2 = set([x[0] for x in associates[m]])
                 distance = 1 - jaccard(set_1, set_2)
-                distances[m] = distance
+                distances[m] = distance 
             distances_r = sorted(distances.items(), key=operator.itemgetter(1), reverse=True)
             return render_template('home.html', result=associates, word=query.split('_')[0], pos=query.split('_')[-1], distances=distances_r, models=our_models)
     return render_template('home.html')
@@ -162,6 +195,10 @@ def genreword(word):
         associates = json.loads(serverquery(message))
         distances = {}
         for m in our_models:
+            plotfile = "%s_%s.png" % (m, query)
+            if not os.access(root + '/plots/' + plotfile, os.F_OK):
+                print >> sys.stderr, 'No previous image found'
+                plot(m, our_models[m], query, associates)
             if m == 'all':
                 continue
             set_1 = set([x[0] for x in associates['all']])
@@ -171,6 +208,3 @@ def genreword(word):
         distances_r = sorted(distances.items(), key=operator.itemgetter(1), reverse=True)
         return render_template('home.html', result=associates, word=query.split('_')[0], pos=query.split('_')[-1], distances=distances_r, models=our_models)
     return render_template('home.html')
-
-
-
